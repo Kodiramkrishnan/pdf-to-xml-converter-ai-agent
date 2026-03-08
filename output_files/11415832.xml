@@ -1,0 +1,868 @@
+<?xml version="1.0" encoding="utf-8"?>
+<document source="11415832.pdf" pages="6">
+  <page number="1" width="612.00" height="792.00">
+    <header block_id="0" y0="80.40" y1="129.10">Enhancing LLM Fine-tuning for Text-to-SQLs by
+SQL Quality Measurement</header>
+    <paragraph block_id="1" y0="164.55" y1="221.12">Shouvon Sarker, Xishuang Dong, Xiangfang Li, Lijun Qian
+CREDIT Center and Department of Electrical and Computer Engineering
+Prairie View A&amp;M University
+Prairie View, TX 77446, USA
+Email: ssarker3@pvamu.edu, xidong@pvamu.edu, xili@pvamu.edu, liqian@pvamu.edu</paragraph>
+    <paragraph block_id="2" y0="232.35" y1="418.71">Abstract—Text-to-SQLs enables non-expert users to effortlessly
+retrieve desired information from relational databases using nat-
+ural language queries. While recent advancements, particularly
+with Large Language Models (LLMs) like GPT and T5, have
+shown impressive performance on large-scale benchmarks such
+as BIRD, current state-of-the-art (SOTA) LLM-based Text-to-
+SQLs models often require significant efforts to develop auxiliary
+tools like SQL classifiers to achieve high performance. This paper
+proposed a novel approach that only needs SQL Quality Mea-
+surement to enhance LLMs-based Text-to-SQLs performance. It
+establishes a SQL quality evaluation mechanism to assess the
+generated SQL queries against predefined criteria and actual
+database responses. This feedback loop enables continuous learn-
+ing and refinement of model outputs based on both syntactic
+correctness and semantic accuracy. The proposed method under-
+goes comprehensive validation on the BIRD benchmark, assessing
+Execution Accuracy (EX) and Valid Efficiency Score (VES) across
+various Text-to-SQLs difficulty levels. Experimental results reveal
+competitive performance in both EX and VES compared to SOTA
+models like GPT4 and T5.</paragraph>
+    <paragraph block_id="3" y0="426.01" y1="443.81">Keywords–Text-to-SQLs; Large Language Models (LLMs); SQL
+Quality Measurement; Database Information Retrieval</paragraph>
+    <paragraph block_id="4" y0="462.17" y1="471.54">I.
+INTRODUCTION</paragraph>
+    <paragraph block_id="5" y0="478.84" y1="632.42">Text-to-SQLs [1], [2], [3], [4] aims to convert users’ queries
+into executable and structured SQL statements, where these
+queries are presented in natural languages. This technique
+enables non-expert users, particularly those are not familiar
+with the SQL language, to seamless access to knowledge stored
+in rational databases for applications in various areas such as
+finance and medicine. Nonetheless, it poses greater challenges
+compared to general semantic parsing tasks [2], [4]. First,
+even simple user queries may involve complex combinations of
+multiple tables and filtering requirements, necessitating sophis-
+ticated context understanding techniques to fulfill query needs.
+Secondly, there remains a significant gap between existing
+Text-to-SQL methods and real-world applications in efficiently
+and effectively generating high-quality SQLs, especially when
+dealing with large-scale databases.</paragraph>
+    <footer block_id="6" y0="639.72" y1="721.19">Deep learning technologies have greatly advanced Text-to-
+SQLs methods through developing both non-seq2seq methods
+and seq2seq methods classified in terms of model architec-
+tures [2], [1]. For non-seq2seq methods [5], [6], [7], they
+typically involve two stages: 1) it employ encoder models
+with attention mechanisms like BERT [8] to learn high-quality
+representations of user queries; 2) it constructs sketch-based or
+grammar-based systems to generate SQL statements. On the</footer>
+    <paragraph block_id="7" y0="231.91" y1="292.78">other hand, seq2seq methods [9], [10], [11] treat Text-to-SQLs
+as a machine translation task, directly translating user queries
+into SQL statements in an end-to-end manner. This approach
+has achieved competitive performance through fine-tuning with
+minimal effort. However, a reliable Text-to-SQLs parser has
+yet to be fully implemented.</paragraph>
+    <paragraph block_id="8" y0="301.99" y1="568.89">The emergence of Large Language Models (LLMs) has
+recently facilitated Text-to-SQL methods by building an in-
+terface between non-expert users and relational databases,
+leveraging the robust linguistic and coding capabilities of
+LLMs. This has sparked a new trend of LLM-based Text-
+to-SQL approaches [3]. Specifically, the in-context learning
+and domain generalization abilities of LLMs have significantly
+improved Text-to-SQL performance. For example, DIN-SQL
+decomposes the Text-to-SQL task into smaller sub-tasks to
+enhance performance on datasets like Spider [12]. DAIL-SQL
+explores the selection and organization of helpful examples
+in prompts in few-shot scenarios through supervised fine-
+tuning and a systematic study of in-context learning [13].
+ACT-SQL introduces a Chain-of-Thought (CoT) [14] prompt
+to enhance reasoning abilities in SQL generation, extending
+to multi-turn Text-to-SQL tasks [15]. Furthermore, to address
+database schema with few rows of values, the Big bench for
+large-scale Database (BIRD) is proposed to bridge the gap
+between academic study and real-world applications [4]. Text-
+to-SQL methods applied on BIRD have garnered significant
+attention [4], [16], [17] , achieving high performance through
+additional efforts such as developing SQL classifiers [4], fine-
+tuning LLMs [16], or facilitating multi-agent LLM collabo-
+rations [17]. Although these research efforts have advanced
+LLM-based Text-to-SQL systems, they often require complex
+data preprocessing or data augmentation techniques.</paragraph>
+    <footer block_id="9" y0="578.10" y1="721.38">In this study, we aim to enhance LLM-based Text-to-SQL
+by using straightforward feedback mechanisms and human-
+designed step-by-step prompts (HDSP). The method requires
+only LLMs reasoning and low-cost SQL quality assessment.
+The flow of the proposed method is illustrated in Figure 1.
+First, in the prompt engineering block, we design step-by-
+step prompts to LLMs for enhancing the Text-to-SQL perfor-
+mance. Next, we implement a feedback mechanism through
+SQL quality measurement. This mechanism compares gen-
+erated SQL statements against expected outcomes, providing
+direct feedback on SQL difficulties to automatically refine
+the prompts. We systematically validate our approach on
+BIRD datasets, assessing Execution Accuracy (EX) and Valid
+Efficiency Score (VES) [4]. Experimental results demonstrate</footer>
+    <footer block_id="10" y0="748.54" y1="756.54">2673</footer>
+    <header block_id="11" y0="23.17" y1="33.17">2025 IEEE International Conference on Data Mining Workshops (ICDMW)</header>
+    <footer block_id="12" y0="748.54" y1="764.54">2375-9259/25/$31.00 ©2025 IEEE
+DOI 10.1109/ICDMW69685.2025.00343</footer>
+  </page>
+  <page number="2" width="612.00" height="792.00">
+    <paragraph block_id="0" y0="151.39" y1="188.73">Find all users whose sum
+of total transactions
+spend is greater  than 
+10,000 in the last month</paragraph>
+    <paragraph block_id="1" y0="137.03" y1="202.46">SELECT u.*, SUM(t.amount) AS
+total_spend
+FROM users u
+INNER JOIN transactions t
+ON u.id = t.user id
+WHERE .created _at &gt;
+DATE_SUB(NOW(),
+INTERVAL 1 MON</paragraph>
+    <paragraph block_id="2" y0="163.54" y1="181.53">Prompt
+Enhancement</paragraph>
+    <paragraph block_id="3" y0="191.43" y1="199.52">User Queries</paragraph>
+    <paragraph block_id="4" y0="205.82" y1="213.92">SQLs</paragraph>
+    <paragraph block_id="5" y0="163.99" y1="181.98">LLMs
+
+(GPT, LLAMA, ...)
+</paragraph>
+    <paragraph block_id="6" y0="96.06" y1="104.16">Quality Evaluation
+</paragraph>
+    <paragraph block_id="7" y0="105.96" y1="133.40">(Normalized
+Comparison + Semantic
+Comparison)
+</paragraph>
+    <paragraph block_id="8" y0="105.96" y1="123.95">Generating
+Difficulty Feedback</paragraph>
+    <paragraph block_id="9" y0="160.39" y1="178.38">Human-Designed 
+
+Step-by-Step Prompts</paragraph>
+    <header block_id="10" y0="71.77" y1="79.87">SQL Quality Measurement</header>
+    <paragraph block_id="11" y0="221.99" y1="231.36">Figure 1: Flow of Enhancing LLM Fine-tuning for Text-to-SQLs by SQL Quality Measurement.</paragraph>
+    <paragraph block_id="12" y0="260.62" y1="280.29">significant improvements in both metrics compared to state-
+of-the-art models like GPT4 [18].</paragraph>
+    <paragraph block_id="13" y0="286.98" y1="296.35">In summary, our contributions are as follows:</paragraph>
+    <paragraph block_id="14" y0="304.65" y1="334.95">•
+We design step-by-step prompts that provide detailed
+instructions to LLMs to complete the Text-to-SQLs
+task effectively.</paragraph>
+    <paragraph block_id="15" y0="341.31" y1="381.92">•
+We implement SQL statement quality feedback by
+comparing generated SQL statements against expected
+outcomes, both normally and semantically, to inform
+automatic prompt refinement.</paragraph>
+    <paragraph block_id="16" y0="388.27" y1="449.48">•
+Extensive experiments are conducted to validate the
+proposed method, assessing accuracy and efficiency.
+Experimental results confirm that our approach not
+only automates prompt construction but also enhances
+prompts based on SQL statement quality, thereby
+improving Text-to-SQL performance.</paragraph>
+    <paragraph block_id="17" y0="462.97" y1="472.34">II.
+TASK FORMULATION</paragraph>
+    <paragraph block_id="18" y0="479.03" y1="592.92">LLMs-based Text-to-SQL involves utilizing LLMs to con-
+vert natural language user queries into executable SQL state-
+ments. Let Q represent a natural language query and D denote
+the database schema, where D = (T, C) with T = {t1, ..., tm}
+representing multiple tables and C = {c1, ..., cn} representing
+columns. The objective is to generate a SQL statement ˆY that
+is executable on D to retrieve the information required by
+Q. Formally, given a prompt template P(Q, D) and external
+knowledge evidence K, the generation process of the SQL
+statement ˆY by a large language model (LLM) M can be
+defined as a conditional probability distribution:</paragraph>
+    <paragraph block_id="19" y0="623.29" y1="635.81">PM( ˆY |P(Q, D)) =</paragraph>
+    <paragraph block_id="20" y0="613.68" y1="632.86">| ˆY |
+Y</paragraph>
+    <paragraph block_id="21" y0="623.29" y1="645.46">i=1
+PM( ˆYi|θ, P(Q, D), K, ˆY1:i−1)
+(1)</paragraph>
+    <footer block_id="22" y0="656.51" y1="710.86">It represents the likelihood of generating SQL statement ˆY
+given the natural language query Q, the database schema D,
+any external knowledge evidence K, and the prompt template
+P. The LLM generates each token, denoted by ˆYi representing
+the i-th token of the SQL statement ˆY . | ˆY | denotes the length</footer>
+    <paragraph block_id="23" y0="258.12" y1="301.57">of the SQL statement ˆY , and θ represents the parameter
+of the LLM. Notably, PM( ˆY |P(Q, D)) is assessed in terms
+of syntactic correctness and semantic accuracy, defined as
+execution accuracy.</paragraph>
+    <paragraph block_id="24" y0="316.16" y1="325.52">III.
+METHODOLOGY</paragraph>
+    <paragraph block_id="25" y0="359.58" y1="367.90">Step 1: Analyzing database schema</paragraph>
+    <paragraph block_id="26" y0="379.45" y1="387.76">Step 2: Determining table relationships</paragraph>
+    <paragraph block_id="27" y0="400.24" y1="408.55">Step 3: Outlining required information</paragraph>
+    <paragraph block_id="28" y0="420.11" y1="428.42">Step 4: Identifying filters and conditions</paragraph>
+    <paragraph block_id="29" y0="440.43" y1="448.75">Step 5: Considering data aggregation</paragraph>
+    <paragraph block_id="30" y0="460.30" y1="468.62">Step 6: Planning result ordering</paragraph>
+    <paragraph block_id="31" y0="481.09" y1="489.41">Step 7: Thinking about presentation</paragraph>
+    <paragraph block_id="32" y0="501.06" y1="509.84">Step 8: Constructing the SQL query </paragraph>
+    <paragraph block_id="33" y0="337.62" y1="346.86">Step-by-step Prompts </paragraph>
+    <paragraph block_id="34" y0="528.79" y1="548.46">Figure 2: Human-designed step-by-step (HDSP) prompts for
+Text-to-SQLs via LLMs.</paragraph>
+    <paragraph block_id="35" y0="570.82" y1="600.79">As shown in Figure 1, the proposed method include
+two special components, namely, human-designed step-by-step
+prompts and SQL quality measurement.</paragraph>
+    <paragraph block_id="36" y0="615.21" y1="624.58">A. Step-by-step Prompts</paragraph>
+    <paragraph block_id="37" y0="631.69" y1="651.35">Figure 2 presents details of the step-by-step prompts for
+Text-to-SQLs via LLMs. It include eight steps as below.</paragraph>
+    <footer block_id="38" y0="660.37" y1="710.94">1)
+LLMs are encouraged to begin by understanding
+the database schema. This involves identifying the
+available tables and their relevant columns for the
+user query, which is crucial for generating accurate
+SQL statements.</footer>
+    <footer block_id="39" y0="748.54" y1="756.54">2674</footer>
+  </page>
+  <page number="3" width="612.00" height="792.00">
+    <header block_id="0" y0="72.19" y1="308.19">2)
+LLMs are prompted to identify how tables are inter-
+connected by determining the types of joins needed to
+connect them, essential for SQL statements involving
+multiple tables.
+3)
+LLMs consider the specific information to extract
+from each table, including which columns to select
+and any necessary calculations.
+4)
+LLMs pinpoint any required filters or conditions
+to apply to the data, such as WHERE clauses, to
+refine the SQL statements according to the query’s
+requirements.
+5)
+LLMs assess whether the SQL statements involve
+aggregating data, potentially using GROUP BY or
+HAVING clauses to summarize or filter aggregated
+data.
+6)
+LLMs determine how to order the SQL statements,
+which is crucial where the order of the SQL state-
+ments matters (e.g., the top 10 results).
+7)
+LLMs consider the final presentation of the SQL
+statements, deciding whether to use subqueries for
+clarity or WITH clauses to simplify complex queries.
+8)
+LLMs synthesize the information gathered in the
+previous steps into coherent SQL statements.</header>
+    <paragraph block_id="1" y0="316.55" y1="356.82">These step-by-step prompts are able to ensure that the SQL
+statements accurately reflect the natural language requirements
+of the user query, where LLMs can adjust their strategies, and
+gradually improve SQL generation capabilities.</paragraph>
+    <paragraph block_id="2" y0="369.43" y1="378.80">B. SQL Quality Measurement</paragraph>
+    <paragraph block_id="3" y0="385.49" y1="425.76">As shown in Figure 1, it needs the quality of generated
+SQL to build a feedback of SQL difficulties to refine the
+prompts. Measuring the SQL quality includes two components:
+Normalized Comparison and Semantic Comparison.</paragraph>
+    <paragraph block_id="4" y0="432.10" y1="493.73">1) Normalized Comparison: It quantifies the syntactic sim-
+ilarity between the SQL statement ˆY and the ground truth
+Y . Levenshtein distance (L(·)) is employed as the metric for
+evaluating their similarity, defined as the minimum number
+of single-character edits required to change one string into
+another. Thus, the normalized comparison can be defined as:</paragraph>
+    <paragraph block_id="5" y0="512.80" y1="531.66">fnc( ˆY , Y ) = 1 −
+L(fNorm( ˆY ), fNorm(Y ))</paragraph>
+    <paragraph block_id="6" y0="524.37" y1="547.81">max(
+   fNorm( ˆY )
+    , |fNorm(Y )|)
+(2)</paragraph>
+    <paragraph block_id="7" y0="556.08" y1="566.36">where fNorm(·) represents the normalization of an input.</paragraph>
+    <paragraph block_id="8" y0="572.12" y1="624.06">2) Semantic Comparison: Semantic comparison is defined
+as a binary indicator of whether the type of the answer ˆA
+generated through running the generated SQL statement ( ˆY ) is
+same to that of the answer (A′) generated by ChatGPT directly
+in terms of the user query, which is defined as:</paragraph>
+    <paragraph block_id="9" y0="636.87" y1="661.18">fsc( ˆA, A′) =
+ 1
+if R( ˆA) = R(A′)
+0
+otherwise.
+(3)</paragraph>
+    <paragraph block_id="10" y0="674.05" y1="683.75">where R(·) is to check the type of the input.</paragraph>
+    <footer block_id="11" y0="690.28" y1="709.94">In terms of the results of the normalized comparison, the
+feedback of SQL difficulties is defined by</footer>
+    <header block_id="12" y0="85.08" y1="95.24">fdiff(fnc, Ncol) =</header>
+    <header block_id="13" y0="72.62" y1="90.41">
+</header>
+    <paragraph block_id="14" y0="97.90" y1="107.27"></paragraph>
+    <header block_id="15" y0="72.73" y1="117.25">0
+if
+fnc &lt; tnc and Ncol ≤5
+1
+if
+fnc &lt; tnc and 5 &lt; Ncol &lt; 10
+2
+if
+fnc &lt; tnc and Ncol ≥10
+(4)</header>
+    <paragraph block_id="16" y0="123.82" y1="184.69">where 0, 1, and 2 denote simple, moderate, and difficult
+SQL statements, tnc denotes a threshold of the normalized
+comparison, and Ncol refers to the number of columns involved
+in the SQL statement. Furthermore, a specific feedback to
+implement the prompt enhancement shown in Figure 1 is
+defined by</paragraph>
+    <paragraph block_id="17" y0="224.45" y1="234.61">fsf(fnc, fsc, fdiff) =</paragraph>
+    <paragraph block_id="18" y0="206.37" y1="229.78">
+
+
+</paragraph>
+    <paragraph block_id="19" y0="237.27" y1="252.26">
+
+</paragraph>
+    <paragraph block_id="20" y0="205.92" y1="262.80">1
+if
+fnc ≥tnc and fsc = 0
+or fnc &lt; tnc and fdiff = 1
+or fnc &lt; tnc and fdiff = 2
+0
+otherwise
+(5)</paragraph>
+    <paragraph block_id="21" y0="269.15" y1="289.04">If the value of fsf is 1, the step-by-step prompts are
+extended with five steps below.</paragraph>
+    <paragraph block_id="22" y0="297.49" y1="512.88">1)
+Complex Joins and Subqueries: LLMs are encour-
+aged to plan the ordering of results and the combina-
+tion of multiple datasets. This involves deciding on
+the appropriate JOIN types and conditions.
+2)
+Data Transformation and Calculations: LLMs are
+prompted to identify any complex calculations or
+transformations needed for the data. This includes
+creating new columns based on existing data using
+SQL functions or handling date and time calcula-
+tions.
+3)
+Optimization: LLMs review the query for perfor-
+mance and optimization, considering indexing and
+query simplification to improve execution speed.
+4)
+Security and Data Integrity: LLMs ensure that the
+query adheres to security practices and maintains
+data integrity, avoiding SQL injection risks by using
+parameterized queries or prepared statements.
+5)
+Review and Test: Before finalizing, review the query
+thoroughly. Test it against different scenarios to en-
+sure it covers all edge cases and produces expected
+results.</paragraph>
+    <paragraph block_id="23" y0="521.32" y1="561.59">These five steps are inserted into the step-by-step prompts
+between step five and step six shown in Figure 2 to further
+enhance Text-to-SQLs. The flow of the proposed feedback
+mechanism is summarized as Figure 3.</paragraph>
+    <paragraph block_id="24" y0="574.52" y1="583.89">IV.
+EXPERIMENTS</paragraph>
+    <paragraph block_id="25" y0="590.29" y1="599.66">A. Dataset</paragraph>
+    <paragraph block_id="26" y0="606.30" y1="677.56">BIRD (BIg Bench for LaRge-scale Database Grounded
+Text-to-SQL Evaluation)1 is a pioneering, cross-domain dataset
+designed to examine the impact of extensive database contents
+on text-to-SQL parsing [4]. BIRD includes over 12,751 unique
+question-SQL pairs and 95 large databases with a total size of
+33.4 GB. It spans more than 37 professional domains, such
+as blockchain, hockey, healthcare, and education. Designed</paragraph>
+    <paragraph block_id="27" y0="686.65" y1="695.37">1https://bird-bench.github.io</paragraph>
+    <footer block_id="28" y0="748.54" y1="756.54">2675</footer>
+  </page>
+  <page number="4" width="612.00" height="792.00">
+    <paragraph block_id="0" y0="102.37" y1="112.17">Calculate fnc</paragraph>
+    <paragraph block_id="2" y0="162.54" y1="172.33">Calculate fsc</paragraph>
+    <paragraph block_id="3" y0="189.47" y1="199.26">fsc == 1
+Calculate fdiff</paragraph>
+    <paragraph block_id="4" y0="162.54" y1="172.33">Calculate fsf</paragraph>
+    <paragraph block_id="5" y0="135.52" y1="144.41">fsf  == 1</paragraph>
+    <paragraph block_id="6" y0="148.99" y1="154.04">yes</paragraph>
+    <paragraph block_id="7" y0="188.96" y1="194.01">no</paragraph>
+    <paragraph block_id="8" y0="100.76" y1="108.34">Add additional</paragraph>
+    <paragraph block_id="9" y0="110.02" y1="117.59">five steps</paragraph>
+    <paragraph block_id="10" y0="133.42" y1="138.47">no</paragraph>
+    <paragraph block_id="11" y0="120.80" y1="125.85">yes</paragraph>
+    <paragraph block_id="12" y0="146.04" y1="151.09">no</paragraph>
+    <paragraph block_id="13" y0="215.63" y1="223.20">End</paragraph>
+    <header block_id="14" y0="76.78" y1="84.35">Start</header>
+    <paragraph block_id="15" y0="233.78" y1="243.15">Figure 3: Flow of the proposed feedback mechanism.</paragraph>
+    <paragraph block_id="16" y0="273.87" y1="386.24">to address the complexities of working with large, real-world
+databases, BIRD emphasizes the importance of understanding
+database values, incorporating external knowledge for accu-
+rate SQL query generation, and focusing on SQL execution
+efficiency. BIRD not only presents new challenges for de-
+veloping more effective text-to-SQL models but also sets a
+new benchmark for evaluating model performance in real-
+world scenarios. It highlights the gap between current machine
+learning models and human-level SQL query formulation.
+Figure 4 presents one example of data sample from BIRD
+benchmark.</paragraph>
+    <paragraph block_id="17" y0="398.75" y1="404.09">User Query
+SQL Statement</paragraph>
+    <paragraph block_id="18" y0="448.86" y1="454.20">Database Schema</paragraph>
+    <paragraph block_id="19" y0="398.75" y1="404.09">Knowledge</paragraph>
+    <paragraph block_id="20" y0="410.77" y1="441.51">Find the total capacity
+of wind turbines located
+in 'Green Valley' that
+have been operational
+since 2015.</paragraph>
+    <paragraph block_id="21" y0="409.77" y1="440.51">SELECT SUM(Capacity)
+FROM WindTurbines
+WHERE Location = 'Green
+Valley' AND
+OperationalSince = 2015;</paragraph>
+    <paragraph block_id="22" y0="407.43" y1="444.85">The concept of
+"capacity" refers to the
+maximum output the
+turbines can produce,
+typically measured in
+megawatts (MW). 
+</paragraph>
+    <paragraph block_id="23" y0="461.63" y1="475.66">Wind Turbines
+ID
+Location
+OperationSince
+Table 1</paragraph>
+    <paragraph block_id="24" y0="491.69" y1="505.73">Solar Panels
+ID
+Location
+InstallationDate
+Table 2</paragraph>
+    <paragraph block_id="25" y0="525.10" y1="539.13">Energy Storage
+ID
+Type
+InstallationDate
+Table 3</paragraph>
+    <paragraph block_id="26" y0="561.31" y1="570.68">Figure 4: An example of data sample from BIRD benchmark.</paragraph>
+    <paragraph block_id="27" y0="604.70" y1="614.06">B. Experiment Setup</paragraph>
+    <footer block_id="28" y0="622.11" y1="713.88">We utilized a range of large language models (LLMs),
+such as T5 and GPT variants, each configured in unique
+setups to investigate various enhancement strategies, including
+the integration of external knowledge, prompt engineering,
+and feedback mechanisms. Each LLM was fine-tuned with
+a dataset tailored specifically to Text-to-SQL tasks, ensuring
+familiarity with the relevant vocabulary and structure. The
+models were tested under controlled conditions to precisely
+measure their performance in generating SQL statements.</footer>
+    <header block_id="29" y0="72.18" y1="81.54">C. Evaluation Metrics</header>
+    <header block_id="30" y0="88.37" y1="108.03">To assess the performance of LLMs in generating SQL
+statements, two primary metrics were employed [4]:</header>
+    <paragraph block_id="31" y0="116.28" y1="187.79">•
+Execution Accuracy (EX): This metric quantifies the
+correctness of the generated SQL statements by com-
+paring them to a set of predefined ground truths. A
+higher EX score indicates a higher similarity between
+the generated SQL statements and the ground truth,
+reflecting the model’s understanding and query gener-
+ation capabilities.</paragraph>
+    <paragraph block_id="32" y0="194.12" y1="275.93">•
+Valid Efficiency Score (VES): VES evaluates the effi-
+ciency of the SQL statements generated by the models,
+taking into account both the accuracy of the SQL
+statement and its execution time against the database.
+A higher VES signifies not only correct but also op-
+timally efficient generation of SQL statements, which
+is crucial for real-time applications of autonomous
+systems.</paragraph>
+    <paragraph block_id="33" y0="284.51" y1="335.08">These metrics offer a comprehensive view of the models’
+performance, highlighting not just the accuracy but also the
+efficiency of the generated SQL statements, two critical aspects
+in the deployment of autonomous systems across various
+sectors.</paragraph>
+    <paragraph block_id="34" y0="348.25" y1="357.62">D. Result and Discussion</paragraph>
+    <paragraph block_id="35" y0="364.44" y1="507.73">Table I presents a performance comparison between base-
+line models (T5 and GPT-3) and proposed methods based
+on GPT-3.5 and GPT-4, using EX and VES scores. Overall,
+incorporating knowledge (KG) significantly enhances the per-
+formance of LLM-based Text-to-SQL models. Additionally,
+when comparing the performance of LLMs using human-
+designed step-by-step prompts (HDSP) and feedback mech-
+anisms, the feedback mechanism proves to be more beneficial.
+Furthermore, combining HDSP with the feedback mechanism
+allows GPT-4 to achieve the highest EX values, indicating that
+feedback effectively enhances the prompts within the HDSP
+framework shown in Figure 1. However, this combination re-
+duces the VES values due to increased complexity in executing
+SQL statements, particularly with the feedback mechanism.</paragraph>
+    <paragraph block_id="36" y0="525.74" y1="555.71">TABLE I: Comparing baselines with proposed methods by EX
+and VES scores, where KG and HDSP denote knowledge and
+human-designed step-by-step prompts, respectively.</paragraph>
+    <paragraph block_id="37" y0="563.82" y1="570.38">LLMs
+EX
+VES</paragraph>
+    <paragraph block_id="38" y0="590.48" y1="597.03">T5</paragraph>
+    <paragraph block_id="39" y0="571.75" y1="615.76">T5-Base
+6.32
+7.78
+T5-Large
+9.71
+9.90
+T5-3B
+10.37
+13.62
+T5-Base + KG
+11.54
+12.90
+T5-Large + KG
+19.75
+22.74
+T5-3B + KG
+23.34
+25.57</paragraph>
+    <paragraph block_id="40" y0="617.07" y1="631.12">GPT-3
+GPT-3
+24.05
+27.97
+GPT-3 + KG
+37.22
+43.81</paragraph>
+    <paragraph block_id="41" y0="654.91" y1="661.46">GPT-3.5</paragraph>
+    <paragraph block_id="42" y0="632.43" y1="668.96">GPT-3.5
+26.01
+29.39
+GPT-3.5 + KG
+39.48
+41.39
+GPT 3.5 + KG + HDSP
+38.20
+39.25
+GPT-3.5 + KG + Feedback
+40.48
+42.68
+GPT-3.5 + KG + Feedback + HDSP
+41.16
+41.37</paragraph>
+    <footer block_id="43" y0="692.74" y1="699.30">GPT-4</footer>
+    <footer block_id="44" y0="670.27" y1="706.79">GPT-4
+30.90
+34.60
+GPT-4 + KG
+46.35
+49.77
+GPT-4 + KG + HDSP
+47.06
+47.26
+GPT-4 + KG + Feedback
+47.86
+47.35
+GPT-4 + KG + Feedback + HDSP
+49.87
+47.32</footer>
+    <footer block_id="45" y0="748.54" y1="756.54">2676</footer>
+  </page>
+  <page number="5" width="612.00" height="792.00">
+    <header block_id="0" y0="72.28" y1="133.15">Furthermore, Figure 5 provides a clear visualization of the
+performance across different LLM configurations, making it
+easier to recognize performance trends. For EX scores, GPT-
+4 outperformed other LLMs when combined with HDSP and
+feedback. However, for VES scores, it was observed that the
+use of feedback and HDSP actually reduced performance.</header>
+    <paragraph block_id="2" y0="311.46" y1="319.55">(a) EX scores across different LLMs configurations.</paragraph>
+    <paragraph block_id="4" y0="474.91" y1="483.01">(b) VES scores across different LLMs configurations.</paragraph>
+    <paragraph block_id="5" y0="503.58" y1="523.25">Figure 5: A bar chart provides a clear visualization of the
+performance of different LLMs configurations.</paragraph>
+    <footer block_id="6" y0="556.44" y1="710.03">Since GPT models outperform T5, we focus on GPT-
+based Text-to-SQL performance across different sample types.
+Tables II and III show the performance of GPT models
+on three sample types as predefined in the BIRD datasets.
+Incorporating knowledge (KG) enhances performance across
+all sample types, indicating that additional information about
+the database, such as schema and column details, aids in gener-
+ating SQL statements. The feedback mechanism is particularly
+beneficial for improving performance on simple samples com-
+pared to moderate and difficult ones. Additionally, combining
+the feedback mechanism with human-designed step-by-step
+prompts (HDSP) improves performance for both simple and
+difficult samples with GPT-4. This validates that enhanced
+prompts with feedback are more effective in improving Text-
+to-SQL performance.</footer>
+    <header block_id="7" y0="72.18" y1="91.85">TABLE II: EX scores across different GPT model configura-
+tions.</header>
+    <paragraph block_id="8" y0="99.96" y1="106.52">LLMs
+Simple
+Moderate
+Difficult</paragraph>
+    <paragraph block_id="9" y0="107.89" y1="121.93">GPT-3
+GPT-3
+31.08
+13.29
+12.08
+GPT-3 + KG
+45.44
+26.14
+19.01</paragraph>
+    <paragraph block_id="10" y0="145.72" y1="152.28">GPT-3.5</paragraph>
+    <paragraph block_id="11" y0="123.24" y1="159.77">GPT-3.5
+34.70
+13.33
+11.11
+GPT-3.5 + KG
+49.73
+28.39
+18.06
+GPT 3.5 + KG + HDSP
+47.03
+26.24
+20.14
+GPT-3.5 + KG + Feedback
+50.05
+28.17
+18.75
+GPT-3.5 + KG + Feedback + HDSP
+48.68
+32.18
+20.83</paragraph>
+    <paragraph block_id="12" y0="183.55" y1="190.11">GPT-4</paragraph>
+    <paragraph block_id="13" y0="161.08" y1="197.60">GPT-4
+36.96
+24.64
+12.32
+GPT-4 + KG
+55.44
+36.66
+18.48
+GPT-4 + KG + HDSP
+42.78
+15.98
+17.28
+GPT-4 + KG + Feedback
+56.86
+24.87
+33.64
+GPT-4 + KG + Feedback + HDSP
+62.86
+26.83
+35.68</paragraph>
+    <paragraph block_id="14" y0="217.14" y1="236.81">TABLE III: VES scores across different GPT Model configu-
+rations</paragraph>
+    <paragraph block_id="15" y0="244.92" y1="251.48">LLMs
+Simple
+Moderate
+Difficult</paragraph>
+    <paragraph block_id="16" y0="252.85" y1="266.90">GPT-3
+GPT-3
+36.20
+15.43
+14.42
+GPT-3 + KG
+54.71
+28.16
+22.80</paragraph>
+    <paragraph block_id="17" y0="290.68" y1="297.24">GPT-3.5</paragraph>
+    <paragraph block_id="18" y0="268.21" y1="304.73">GPT-3.5
+40.05
+13.95
+10.76
+GPT-3.5 + KG
+51.83
+28.91
+16.72
+GPT 3.5 + KG + HDSP
+49.14
+27.43
+15.84
+GPT-3.5 + KG + Feedback
+51.98
+28.83
+17.08
+GPT-3.5 + KG + Feedback + HDSP
+48.65
+32.28
+20.71</paragraph>
+    <paragraph block_id="19" y0="328.52" y1="335.07">GPT-4</paragraph>
+    <paragraph block_id="20" y0="306.04" y1="342.56">GPT-4
+43.31
+24.17
+13.96
+GPT-4 + KG
+60.31
+34.76
+20.08
+GPT-4 + KG + HDSP
+61.71
+25.63
+31.55
+GPT-4 + KG + Feedback
+60.43
+24.10
+31.68
+GPT-4 + KG + Feedback + HDSP
+61.98
+23.82
+31.87</paragraph>
+    <paragraph block_id="21" y0="364.68" y1="374.05">V.
+RELATED WORK</paragraph>
+    <paragraph block_id="22" y0="380.94" y1="503.62">Text-to-SQLs, which uses natural language queries to gen-
+erate SQL statements, particularly through LLMs like GPT, is
+a rapidly evolving field. It aims to simplify the creation of SQL
+statements, enabling users to retrieve information using natural
+language. However, current performance of LLMs in Text-to-
+SQLs does not yet meet application requirements compared to
+human performance [4]. To advance Text-to-SQL, the BIRD
+benchmark [4] has been proposed to assess the readiness of
+LLMs as database interfaces through text-to-SQL tasks. BIRD
+features a comprehensive dataset across multiple domains to
+challenge models with real-world database values and the need
+for external knowledge in SQL statement generation.</paragraph>
+    <footer block_id="23" y0="510.51" y1="705.30">Based on BIRD, several significant works have been com-
+pleted to promote Text-to-SQLs. Sun et. al introduced the
+SQL-PaLM framework [19] through using few-shot prompting
+and instruction fine-tuning. In few-shot prompting, it ex-
+plores the effectiveness of consistency decoding combined with
+execution-based error filtering. Instruction fine-tuning delves
+into understanding the critical paradigms that influence the
+performance of fine-tuned LLMs. Additionally, it proposes a
+test-time selection method to further refine accuracy by inte-
+grating SQL outputs from multiple paradigms with execution
+feedback as guidance. Pourreza et. al proposed DIN-SQL [12],
+which decomposes the Text-to-SQL task into four sub-steps:
+schema linking, complexity classification, SQL prediction, and
+self-correction. It also leverages few-shot prompting tech-
+niques. Experiments show that DIN-SQL not only narrows the
+performance gap between fine-tuned models and prompting
+approaches but also achieves state-of-the-art accuracy on the
+Spider and BIRD benchmarks. Li et. al proposed CodeS [20],
+a series of pre-trained language models designed specifically</footer>
+    <footer block_id="24" y0="748.54" y1="756.54">2677</footer>
+  </page>
+  <page number="6" width="612.00" height="792.00">
+    <header block_id="0" y0="72.13" y1="225.71">for generating SQL statements from natural language inputs.
+Ranging from 1B to 15B parameters, CodeS models aimed to
+overcome the limitations of closed-source LLMs by being fully
+open-source and using an incremental pre-training approach
+on a curated SQL-centric corpus. CodeS enhances Text-to-
+SQL performance with comprehensive database prompts and a
+bi-directional data augmentation technique to facilitate adap-
+tation to new domains. Wang et. al proposed a multi-agent
+system [17] to enhance SQL statement generation from natural
+language queries. It consists of three agents: the Decomposer,
+which breaks down complex questions; the Selector, which
+filters relevant database schema elements; and the Refiner,
+which corrects SQL errors. The framework leverages chain-
+of-thought reasoning and few-shot learning, significantly im-
+proving accuracy and robustness in SQL statement generation.</header>
+    <paragraph block_id="1" y0="232.39" y1="293.26">Although previous research has advanced LLM-based Text-
+to-SQL systems, these approaches often require complex data
+preprocessing or data augmentation techniques. In this study,
+we aim to enhance LLM-based Text-to-SQL by using straight-
+forward feedback mechanisms and human-designed step-by-
+step prompts.</paragraph>
+    <paragraph block_id="2" y0="306.67" y1="316.03">VI.
+CONCLUSION AND FUTURE WORK</paragraph>
+    <paragraph block_id="3" y0="322.71" y1="486.60">Recent advancements in LLM-based Text-to-SQL systems
+have improved the user experience for non-experts in retrieving
+information from relational databases using natural language
+queries. However, current state-of-the-art (SOTA) LLM-based
+Text-to-SQL models often require significant effort to develop
+auxiliary tools like SQL classifiers for optimal performance.
+This paper proposes a novel approach that enhances LLM-
+based Text-to-SQL performance using feedback based solely
+on SQL Quality Measurement. The proposed method un-
+dergoes comprehensive validation on the BIRD benchmark,
+assessing EX and VES across various Text-to-SQL difficulty
+levels. Experimental results reveal competitive performance in
+both EX and VES compared to SOTA models like GPT-4 and
+T5. Future work will involve validating the proposed method
+with more advanced LLMs and improving VES performance
+by reducing the complexity of feedback mechanisms.</paragraph>
+    <paragraph block_id="4" y0="500.00" y1="509.37">ACKNOWLEDGMENT</paragraph>
+    <paragraph block_id="5" y0="516.04" y1="628.42">This research work is supported by NASA under award
+number 80NSSC22KM0052, by the Army Research Office
+under cooperative agreement number W911NF-24-2-0133, and
+by the NSF under award number 2428761. The views and
+conclusions contained in this document are those of the authors
+and should not be interpreted as representing the official
+policies, either expressed or implied, of NASA, NSF, or the
+Army Research Office or the U.S. Government. The U.S. Gov-
+ernment is authorized to reproduce and distribute reprints for
+Government purposes notwithstanding any copyright notation
+herein.</paragraph>
+    <paragraph block_id="6" y0="641.83" y1="651.19">REFERENCES</paragraph>
+    <footer block_id="7" y0="657.42" y1="709.42">[1]
+B. Qin, B. Hui, L. Wang, M. Yang, J. Li, B. Li, R. Geng, R. Cao, J. Sun,
+L. Si et al., “A survey on text-to-sql parsing: Concepts, methods, and
+future directions,” arXiv preprint arXiv:2208.13629, 2022.
+[2]
+A. Kumar, P. Nagarkar, P. Nalhe, and S. Vijayakumar, “Deep learning
+driven natural languages text to sql query conversion: A survey,” arXiv
+preprint arXiv:2208.04415, 2022.</footer>
+    <header block_id="8" y0="72.30" y1="667.44">[3]
+B. Zhang, Y. Ye, G. Du, X. Hu, Z. Li, S. Yang, C. H. Liu, R. Zhao,
+Z. Li, and H. Mao, “Benchmarking the text-to-sql capability of
+large language models: A comprehensive evaluation,” arXiv preprint
+arXiv:2403.02951, 2024.
+[4]
+J. Li, B. Hui, G. Qu, J. Yang, B. Li, B. Li, B. Wang, B. Qin, R. Geng,
+N. Huo et al., “Can llm already serve as a database interface? a
+big bench for large-scale database grounded text-to-sqls,” Advances in
+Neural Information Processing Systems, vol. 36, 2024.
+[5]
+R. Cai, J. Yuan, B. Xu, and Z. Hao, “Sadga: Structure-aware dual graph
+aggregation network for text-to-sql,” Advances in Neural Information
+Processing Systems, vol. 34, 2021, pp. 7664–7676.
+[6]
+D. Choi, M. C. Shin, E. Kim, and D. R. Shin, “Ryansql: Recursively
+applying sketch-based slot fillings for complex text-to-sql in cross-
+domain databases,” Computational Linguistics, vol. 47, no. 2, 2021,
+pp. 309–332.
+[7]
+B. Hui, R. Geng, L. Wang, B. Qin, Y. Li, B. Li, J. Sun, and Y. Li,
+“S2sql: Injecting syntax to question-schema interaction graph encoder
+for text-to-sql parsers,” in Findings of the Association for Computational
+Linguistics: ACL 2022, 2022, pp. 1254–1262.
+[8]
+J. Devlin, M.-W. Chang, K. Lee, and K. Toutanova, “Bert: Pre-training
+of deep bidirectional transformers for language understanding,” arXiv
+preprint arXiv:1810.04805, 2018.
+[9]
+X. V. Lin, R. Socher, and C. Xiong, “Bridging textual and tabular
+data for cross-domain text-to-sql semantic parsing,” in Findings of the
+Association for Computational Linguistics: EMNLP 2020, 2020, pp.
+4870–4888.
+[10]
+J. Qi, J. Tang, Z. He, X. Wan, Y. Cheng, C. Zhou, X. Wang, Q. Zhang,
+and Z. Lin, “Rasat: Integrating relational structures into pretrained
+seq2seq model for text-to-sql,” in Proceedings of the 2022 Conference
+on Empirical Methods in Natural Language Processing, 2022, pp. 3215–
+3229.
+[11]
+J. Li, B. Hui, R. Cheng, B. Qin, C. Ma, N. Huo, F. Huang, W. Du,
+L. Si, and Y. Li, “Graphix-t5: mixing pre-trained transformers with
+graph-aware layers for text-to-sql parsing,” in Proceedings of the Thirty-
+Seventh AAAI Conference on Artificial Intelligence and Thirty-Fifth
+Conference on Innovative Applications of Artificial Intelligence and
+Thirteenth Symposium on Educational Advances in Artificial Intelli-
+gence, 2023, pp. 13 076–13 084.
+[12]
+M. Pourreza and D. Rafiei, “Din-sql: Decomposed in-context learning
+of text-to-sql with self-correction,” Advances in Neural Information
+Processing Systems, vol. 36, 2024.
+[13]
+D. Gao, H. Wang, Y. Li, X. Sun, Y. Qian, B. Ding, and J. Zhou, “Text-
+to-sql empowered by large language models: A benchmark evaluation,”
+arXiv preprint arXiv:2308.15363, 2023.
+[14]
+J. Wei, X. Wang, D. Schuurmans, M. Bosma, F. Xia, E. Chi, Q. V. Le,
+D. Zhou et al., “Chain-of-thought prompting elicits reasoning in large
+language models,” Advances in neural information processing systems,
+vol. 35, 2022, pp. 24 824–24 837.
+[15]
+H. Zhang, R. Cao, L. Chen, H. Xu, and K. Yu, “Act-sql: In-context
+learning for text-to-sql with automatically-generated chain-of-thought,”
+in Findings of the Association for Computational Linguistics: EMNLP
+2023, 2023, pp. 3501–3532.
+[16]
+M. Pourreza and D. Rafiei, “Dts-sql: Decomposed text-to-sql with small
+large language models,” arXiv preprint arXiv:2402.01117, 2024.
+[17]
+B. Wang, C. Ren, J. Yang, X. Liang, J. Bai, Q.-W. Zhang, Z. Yan,
+and Z. Li, “Mac-sql: Multi-agent collaboration for text-to-sql,” arXiv
+preprint arXiv:2312.11242, 2023.
+[18]
+J. Achiam, S. Adler, S. Agarwal, L. Ahmad, I. Akkaya, F. L. Aleman,
+D. Almeida, J. Altenschmidt, S. Altman, S. Anadkat et al., “Gpt-4
+technical report,” arXiv preprint arXiv:2303.08774, 2023.
+[19]
+R. Sun, S. O. Arik, H. Nakhost, H. Dai, R. Sinha, P. Yin, and T. Pfister,
+“Sql-palm: Improved large language modeladaptation for text-to-sql,”
+arXiv preprint arXiv:2306.00739, 2023.
+[20]
+H. Li, J. Zhang, H. Liu, J. Fan, X. Zhang, J. Zhu, R. Wei, H. Pan, C. Li,
+and H. Chen, “Codes: Towards building open-source language models
+for text-to-sql,” arXiv preprint arXiv:2402.16347, 2024.</header>
+    <footer block_id="9" y0="748.54" y1="756.54">2678</footer>
+  </page>
+</document>
